@@ -2,6 +2,9 @@
 
 using MonoMod.RuntimeDetour;
 using System.Reflection;
+using UnityEngine;
+using UnityEngine.Networking;
+using System.Collections.Generic;
 
 namespace Kasharin
 {
@@ -13,7 +16,10 @@ namespace Kasharin
         public static readonly string CmdTextColor = "#8a2db8";
         public static readonly string DefaultAddr = "localhost";
         public static readonly int DefaultPort = 25564;
-        public Webserver CurServer;
+        public Webclient CurServer;
+        public static Vector3 MainPlrPos;
+        public static List<Player> OnlinePlayers = new List<Player>();
+        
         public override void Start()
         {
             Log($"{ModName} v{Version} started successfully.", TextColor);
@@ -41,8 +47,9 @@ namespace Kasharin
                 port = int.Parse(args[1]);
             }
             //TODO: disconnect if previous webserver exist..
-            this.CurServer = new Webserver(addr, port, this);
-            this.CurServer.Connect();
+            this.CurServer = new Webclient(addr, port, this);
+            this.CurServer.ServerConnect();
+
         }
 
         public static void Log(string text, string color="#FFFFFF") {
@@ -51,8 +58,8 @@ namespace Kasharin
         public static void OnPlrControllerUpdate(Action<PlayerController> orig, PlayerController self)
         {
             orig(self);
+            MainPlrPos =  self.transform.position;
         }
-
         public override void Exit() { }
         public override void Init() { }
     }
