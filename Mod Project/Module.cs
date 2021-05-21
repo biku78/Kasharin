@@ -5,6 +5,10 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections.Generic;
+using System.Collections;
+using Gungeon;
+using MonoMod;
+using ItemAPI;
 
 namespace Kasharin
 {
@@ -27,6 +31,12 @@ namespace Kasharin
                 typeof(PlayerController).GetMethod("Update", BindingFlags.Instance | BindingFlags.Public),
                 typeof(Module).GetMethod("OnPlrControllerUpdate")
             );
+
+            Hook hook2 = new Hook(
+                typeof(BraveResources).GetMethod("Load", BindingFlags.Static | BindingFlags.Public),
+                typeof(Module).GetMethod("OnLoad")
+            );
+
             ETGModConsole.Commands.AddGroup("host", (args) => {
                 Log($"Kasharin Version {Version}", CmdTextColor);
             });
@@ -47,11 +57,28 @@ namespace Kasharin
                 port = int.Parse(args[1]);
             }
             //TODO: disconnect if previous webserver exist..
-            this.CurServer = new Webclient(addr, port, this);
-            this.CurServer.ServerConnect();
+            //this.CurServer = new Webclient(addr, port, this);
+            //this.CurServer.ServerConnect();
+            try {
+                GameObject plrfrefab = BraveResources.Load("PlayerCoopCultist", ".prefab") as GameObject;
+                UnityEngine.Object.DontDestroyOnLoad(plrfrefab);
+                plrfrefab = UnityEngine.Object.Instantiate<GameObject> (plrfrefab, Vector3.zero, Quaternion.identity);
+                FakePrefab.MarkAsFakePrefab(plrfrefab);
+                plrfrefab.SetActive(true);
+                
+                Player plr2 = new Player(plrfrefab);
+                OnlinePlayers.Add(plr2);
+            } catch (Exception e) {
+                Log(e.ToString());
+            }
 
         }
 
+        public static UnityEngine.Object OnLoad(Action<string, Type, string> orig, string path, Type type, string extension = ".prefab") {
+            Log(path);
+            orig(path, type, extension);
+            return new UnityEngine.Object();
+        }
         public static void Log(string text, string color="#FFFFFF") {
             ETGModConsole.Log($"<color={color}>{text}</color>");
         }
@@ -60,6 +87,7 @@ namespace Kasharin
             orig(self);
             MainPlrPos =  self.transform.position;
         }
+
         public override void Exit() { }
         public override void Init() { }
     }
