@@ -55,16 +55,6 @@ namespace Kasharin
         private void StartClientSend() {
             this.CurSocket.Connect();
             this.CurSocket.Send("Hey i am connected now! This is from ETG!");
-            while (true) {
-                try {   
-                    Vector3 pos = Module.MainPlrPos;
-                    string posStr = $"x : {pos.x}, y: {pos.y}";
-                    this.CurSocket.Send(posStr);
-                } catch (ThreadAbortException e) {
-                    Module.Log(e.ToString());
-                    break;
-                }
-            }
         }
 
     }
